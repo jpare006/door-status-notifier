@@ -12,13 +12,20 @@
  const char* password = SECRET_PASSWORD;
  const char* url      = SECRET_WEBHOOK;
 
+ String testMessageOne = "green button has been pressed";
+ String testMessageTwo = "red button has been pressed";
 
- String testMessage = "Discord test";
+ int GreenBtn = D1;
+ int RedBtn   = D2;
+
+ int buttonPressed;
  
 void setup()
 {
   Serial.begin(115200);
-
+  
+  pinMode(GreenBtn, INPUT);
+  pinMode(RedBtn, INPUT);
   //Connect to a WiFi network
 
   Serial.println();
@@ -41,9 +48,19 @@ void setup()
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
   Serial.println();
+}
 
-  //Setup HTTPS client and connect to host
-
+void loop()
+{
+  if(digitalRead(GreenBtn) == HIGH)
+  {
+    buttonPressed = 1;
+  }
+  else if(digitalRead(RedBtn) == HIGH)
+  {
+    buttonPressed = 2;
+  }
+  
   HTTPClient https;
   
   std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
@@ -53,22 +70,32 @@ void setup()
   if (https.begin(*client, url))
   {
     https.addHeader("Content-Type", "application/json");
-    int httpsCode = https.POST("{\"content\":\"" + testMessage + "\"}");
-  
-    Serial.print("HTTPS Code: ");
-    Serial.println(httpsCode);
-  
+
+    int httpsCode;
+    switch(buttonPressed)
+    {
+      case 1:
+        httpsCode = https.POST("{\"content\":\"" + testMessageOne + "\"}");
+        Serial.print("HTTPS Code: ");
+        Serial.println(httpsCode);
+        delay(1000);
+        break;
+      case 2:
+        httpsCode = https.POST("{\"content\":\"" + testMessageTwo + "\"}");
+        Serial.print("HTTPS Code: ");
+        Serial.println(httpsCode);
+        delay(1000);
+        break;
+    }
     https.end(); 
   }
   else
   {
     Serial.println("[HTTPS] Unable to connect");
-    return;
-  }  
-}
+  }
 
-void loop()
-{
-  // put your main code here, to run repeatedly:
+  
+  
+  delay(100);
 
 }
