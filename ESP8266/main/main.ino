@@ -32,8 +32,11 @@ void loop() {
   // as long as connected to wifi
   if ((WiFiMulti.run() == WL_CONNECTED)) 
   {
-    if (Serial.available() && https.begin(*client, url))
+    if (Serial.available())
     {
+
+      while(!https.begin(*client, url));
+      
       data = Serial.read();
       discord_send(data);
       https.end();
@@ -44,6 +47,7 @@ void loop() {
 int discord_send(char option)
 {
   String message;
+  bool done = false;
   
   if(option == 'o')
   {
@@ -57,7 +61,19 @@ int discord_send(char option)
   {
     message = "Undefined";
   }
-  
-  https.addHeader("Content-Type", "application/json");
-  int httpsCode = https.POST("{\"content\":\"" + message + "\"}");
+
+  while(!done)
+  {
+    https.addHeader("Content-Type", "application/json");
+    int httpsCode = https.POST("{\"content\":\"" + message + "\"}");
+
+    if(httpsCode > 0)
+    {
+      done = true;
+    }
+    else
+    {
+      done = false;
+    }
+  }
 }
