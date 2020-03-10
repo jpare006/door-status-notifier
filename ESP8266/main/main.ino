@@ -1,101 +1,63 @@
-/** @file main.c
- */
+#include <Arduino.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266WiFiMulti.h>
+#include <ESP8266HTTPClient.h>
+#include <WiFiClientSecureBearSSL.h>
+#include "secrets.h"
 
- #include <Arduino.h>
+// ================= global variables =================
+const char* url = SECRET_WEBHOOK;
 
- #include <ESP8266WiFi.h>
- #include <ESP8266HTTPClient.h>
- #include <WiFiClientSecureBearSSL.h>
- #include "secrets.h"
+String messageClosed = "Door is closed";
+String messageOpen   = "Door is OPEN!";
+ESP8266WiFiMulti WiFiMulti;
+HTTPClient https;
+std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
+char data;
+// ================ end global variables ===============
 
- const char* ssid     = SECRET_SSID;
- const char* password = SECRET_PASSWORD;
- const char* url      = SECRET_WEBHOOK;
+int discord_send(char option);
 
- String testMessageOne = "green button has been pressed";
- String testMessageTwo = "red button has been pressed";
+void setup() {
+  Serial.begin(9600);
 
- int GreenBtn = D1;
- int RedBtn   = D2;
-
- int buttonPressed;
- 
-void setup()
-{
-  Serial.begin(115200);
-  
-  pinMode(GreenBtn, INPUT);
-  pinMode(RedBtn, INPUT);
-  //Connect to a WiFi network
-
-  Serial.println();
-  Serial.println();
-  Serial.println();
-  Serial.println("Connecting to ");
-  Serial.println(SECRET_SSID);
-
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(SECRET_SSID, SECRET_PASSWORD);
-
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  Serial.println();
-}
-
-void loop()
-{
-  if(digitalRead(GreenBtn) == HIGH)
-  {
-    buttonPressed = 1;
-  }
-  else if(digitalRead(RedBtn) == HIGH)
-  {
-    buttonPressed = 2;
-  }
-  
-  HTTPClient https;
-  
-  std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
   client->setFingerprint(fingerprint);
 
-  // Check connection to server was successful
-  if (https.begin(*client, url))
-  {
-    https.addHeader("Content-Type", "application/json");
+  //connect to wifi
+  WiFi.mode(WIFI_STA);
+  WiFiMulti.addAP(SECRET_SSID, SECRET_PASSWORD);
+}
 
-    int httpsCode;
-    switch(buttonPressed)
+void loop() {
+  // as long as connected to wifi
+  if ((WiFiMulti.run() == WL_CONNECTED)) 
+  {
+    if (Serial.available() && https.begin(*client, url))
     {
-      case 1:
-        httpsCode = https.POST("{\"content\":\"" + testMessageOne + "\"}");
-        Serial.print("HTTPS Code: ");
-        Serial.println(httpsCode);
-        delay(1000);
-        break;
-      case 2:
-        httpsCode = https.POST("{\"content\":\"" + testMessageTwo + "\"}");
-        Serial.print("HTTPS Code: ");
-        Serial.println(httpsCode);
-        delay(1000);
-        break;
+      data = Serial.read();
+      discord_send(data);
+      https.end();
     }
-    https.end(); 
+  }
+}
+
+int discord_send(char option)
+{
+  String message;
+  
+  if(option == 'o')
+  {
+    message = messageOpen;
+  }
+  else if(option == 'c')
+  {
+    message = messageClosed;
   }
   else
   {
-    Serial.println("[HTTPS] Unable to connect");
+    message = "Undefined";
   }
-
   
-  
-  delay(100);
-
+  https.addHeader("Content-Type", "application/json");
+  int httpsCode = https.POST("{\"content\":\"" + message + "\"}");
 }
