@@ -13,16 +13,15 @@ CFLAGS =-std=c99 -Wall -Wextra -Wpointer-arith -Wcast-align -Wwrite-strings \
 
 all: clean flash
 
-compile: 
-	@avr-gcc -g -Os -mmcu=$(DEVICE) $(CFLAGS) -c $(SRC_FILES) $(INC_DIRS)
+$(OBJS): src/%.o : src/%.c
+	@avr-gcc -g -Os -mmcu=$(DEVICE) $(CFLAGS) -c $< $(INC_DIRS) -o $@
 
-$(BASE).hex: $(SRC_FILES)
-	@avr-gcc -g -Os -mmcu=$(DEVICE) $(CFLAGS) -c $(SRC_FILES) $(INC_DIRS)
-	@avr-gcc -g -mmcu=$(DEVICE) -o $(BASE).elf $(OBJS)
-	@avr-objcopy -j .text -j .data -O ihex $(BASE).elf $(BASE).hex
+$(BASE).hex: $(OBJS)
+	@avr-gcc -g -mmcu=$(DEVICE) -o src/$(BASE).elf $(OBJS)
+	@avr-objcopy -j .text -j .data -O ihex src/$(BASE).elf src/$(BASE).hex
 
 flash: $(BASE).hex
-	avrdude -c $(PROGRAMMER) -p $(DEVICE) -U flash:w:$(BASE).hex
+	avrdude -c $(PROGRAMMER) -p $(DEVICE) -U flash:w:src/$(BASE).hex
 
 clean:
-	rm -f *.o timer.elf timer.hex
+	rm -f src/*.o src/atmega.elf src/atmega.hex
