@@ -11,7 +11,7 @@
 
 void adc_init(void)
 {
-	create();
+	create_adc();
 }
 
 uint8_t adc_read(void)

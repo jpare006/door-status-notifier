@@ -26,7 +26,7 @@ void timer_init(uint16_t period)
 	TimerFlag = 0;
 	avr_timer_count = period;
 
-	create();
+	create_timer();
 }
 
 /*!

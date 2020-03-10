@@ -15,7 +15,7 @@
 
 #include <stdint.h>
 
-void create(void);
+void create_adc(void);
 uint8_t read(void);
 
 #endif /*_ATMEGA168_ADC_H_*/

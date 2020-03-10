@@ -17,7 +17,7 @@
 #include <avr/io.h>
 #include "atmega168_adc.h"
 
-void create(void)
+void create_adc(void)
 {
 	//select AREF as Vref
 	ADMUX &= ~(11 << REFS0); //set bits REFS1 & REFS0 to 0

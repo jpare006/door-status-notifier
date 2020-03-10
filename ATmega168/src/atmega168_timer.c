@@ -11,7 +11,7 @@
 
 #include "atmega168_timer.h"
 
-void create(void)
+void create_timer(void)
 {
 	//Set to Clear Timer on Compare Match (CTC) mode
 	TCCR0A |= (1 << WGM01);

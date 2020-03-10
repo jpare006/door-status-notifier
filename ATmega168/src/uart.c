@@ -27,7 +27,7 @@ static volatile cbuf_handle_t cbuf;
  */
 void uart_init(uint32_t baud_rate)
 {
-	create(baud_rate);
+	create_uart(baud_rate);
 	char * buffer = malloc(sizeof(char) * CBUF_SIZE);
 	cbuf = circular_buf_init(buffer, CBUF_SIZE);
 }

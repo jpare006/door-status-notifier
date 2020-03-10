@@ -41,7 +41,7 @@ static void disable_interrupt(void)
 
 
 
-void create(uint32_t baud_rate)
+void create_uart(uint32_t baud_rate)
 {
 	//set baud rate
 	uint8_t baud_prescaler = ((F_CPU/16)/baud_rate) - 1;

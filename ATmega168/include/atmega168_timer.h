@@ -11,7 +11,7 @@
 
 #include <stdio.h>
 
-void create(void);
+void create_timer(void);
 void on(void);
 void off(void);
 extern void TimerISR(void);

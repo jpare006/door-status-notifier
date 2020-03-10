@@ -11,7 +11,7 @@
 typedef int BOOL;
 enum {TRUE = 1, FALSE = 0};
 
-void create(uint32_t baud_rate);
+void create_uart(uint32_t baud_rate);
 void destroy(void);
 BOOL is_send_ready(void);
 void send(uint8_t data);
