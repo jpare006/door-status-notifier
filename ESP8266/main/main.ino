@@ -6,22 +6,22 @@
 #include "secrets.h"
 
 // ================= global variables =================
-const char* url = SECRET_WEBHOOK;
-
 String messageClosed = "Door is closed";
 String messageOpen   = "Door is OPEN!";
+
+const char* url = SECRET_WEBHOOK;
+char data;
+int code;
+
 ESP8266WiFiMulti WiFiMulti;
 HTTPClient https;
 std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
-char data;
-int code;
 // ================ end global variables ===============
 
 int discord_send(char option);
 
 void setup() {
   Serial.begin(9600);
-
   client->setFingerprint(fingerprint);
 
   //connect to wifi
@@ -31,19 +31,16 @@ void setup() {
 
 void loop() {
   // as long as connected to wifi
-  if ((WiFiMulti.run() == WL_CONNECTED)) 
+  if ((WiFiMulti.run() == WL_CONNECTED))
   {
     if (Serial.available())
     {
-
-      while(!https.begin(*client, url));
-      
       data = Serial.read();
-
+      while (!https.begin(*client, url));
       do
       {
         code = discord_send(data);
-      } while(code < 0); //if code is negative that means error occurred and must retry
+      } while (code < 0); //if code is negative that means error occurred and must retry
       https.end();
     }
   }
@@ -52,12 +49,12 @@ void loop() {
 int discord_send(char option)
 {
   String message;
-  
-  if(option == 'o')
+
+  if (option == 'o')
   {
     message = messageOpen;
   }
-  else if(option == 'c')
+  else if (option == 'c')
   {
     message = messageClosed;
   }
