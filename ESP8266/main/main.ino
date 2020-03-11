@@ -14,6 +14,7 @@ ESP8266WiFiMulti WiFiMulti;
 HTTPClient https;
 std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
 char data;
+int code;
 // ================ end global variables ===============
 
 int discord_send(char option);
@@ -38,7 +39,11 @@ void loop() {
       while(!https.begin(*client, url));
       
       data = Serial.read();
-      discord_send(data);
+
+      do
+      {
+        code = discord_send(data);
+      } while(code < 0); //if code is negative that means error occurred and must retry
       https.end();
     }
   }
@@ -47,7 +52,6 @@ void loop() {
 int discord_send(char option)
 {
   String message;
-  bool done = false;
   
   if(option == 'o')
   {
@@ -62,18 +66,8 @@ int discord_send(char option)
     message = "Undefined";
   }
 
-  while(!done)
-  {
-    https.addHeader("Content-Type", "application/json");
-    int httpsCode = https.POST("{\"content\":\"" + message + "\"}");
+  https.addHeader("Content-Type", "application/json");
+  int httpsCode = https.POST("{\"content\":\"" + message + "\"}");
 
-    if(httpsCode > 0)
-    {
-      done = true;
-    }
-    else
-    {
-      done = false;
-    }
-  }
+  return httpsCode;
 }
