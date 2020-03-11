@@ -9,10 +9,13 @@
 
 #define BAUD      9600
 #define PERIOD    1000 // 1 sec FSM tick rate
-#define THRESHOLD 100  //adc threshold for determing if door open or closed
+#define THRESHOLD 100  //adc threshold for determining if door is open or closed
+#define DELAY     2    //used to delay the sending of another "OPEN" message
 
-enum fsm_states {INIT, OPEN, CLOSED00, CLOSED01} state;
-enum door_status {IS_OPEN, IS_CLOSED00, IS_CLOSED01} door;
+enum fsm_states {INIT, OPEN00, OPEN01, CLOSED00, CLOSED01} state;
+typedef enum door_status {IS_OPEN, IS_CLOSED, UNCHANGED} door;
+
+static void send_status(door status);
 
 int main(void)
 {
@@ -21,12 +24,14 @@ int main(void)
 	uart_init(BAUD);
 	timer_init(PERIOD);
 
-	timer_on();
-	state = INIT;
-
 	//shared variables
 	uint8_t curr_adc;
+	int cnt = 0;
+	state = INIT;
+	door status = IS_OPEN; 
 
+	timer_on();
+	
 	while(1)
 	{
 		//get input
@@ -36,18 +41,27 @@ int main(void)
 		{
 			case INIT:
 				curr_adc = 0;
-				door = IS_OPEN;
-				state = OPEN;
+				cnt      = 0;
+				status   = IS_OPEN;
+				state    = OPEN00;
 				break;
 
-			case OPEN:
-				if (curr_adc <= THRESHOLD)
+			case OPEN00:
+				state = OPEN01;
+				break;
+
+			case OPEN01:
+				if (curr_adc > THRESHOLD)
 				{
-					state = OPEN;
+					state = CLOSED00;
+				}
+				else if (cnt == DELAY)
+				{
+					state = OPEN00;
 				}
 				else
 				{
-					state = CLOSED00;
+					state = OPEN01;
 				}
 				break;
 
@@ -62,7 +76,7 @@ int main(void)
 				}
 				else
 				{
-					state = OPEN;
+					state = OPEN00;
 				}
 				break;
 
@@ -76,36 +90,47 @@ int main(void)
 			case INIT:
 				break;
 
-			case OPEN:
-				door = IS_OPEN;
+			case OPEN00:
+				status = IS_OPEN;
+				cnt = 0;
+				break;
+
+			case OPEN01:
+				status = UNCHANGED;
+				cnt += 1;
 				break;
 
 			case CLOSED00:
-				door = IS_CLOSED00;
+				status = IS_CLOSED;
 				break;
 
 			case CLOSED01:
-				door = IS_CLOSED01;
+				status = UNCHANGED;
 				break;
 
 			default: break;
 		}
 
 		//output
-		switch(door)
-		{
-			case IS_OPEN:
-				uart_send('o'); // o for open
-				break;
-			case IS_CLOSED00:
-				uart_send('c'); // c for closed
-				break;
-			case IS_CLOSED01:
-				break;
-			default: break;
-		}
+		send_status(status);
 
 		while(!TimerFlag);
 		TimerFlag = 0;
 	}
+}
+
+static void send_status(door status)
+{
+	switch(status)
+		{
+			case IS_OPEN:
+				uart_send('o'); // o for open
+				break;
+			case IS_CLOSED:
+				uart_send('c'); // c for closed
+				break;
+			case UNCHANGED:
+				break;
+			default: break;
+		}
 }
