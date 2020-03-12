@@ -1,5 +1,6 @@
 # door-status-notifier
 Device that monitors a door and notifies the user when it has been opened. Uses ATmega168 for monitoring the door and integrates the ESP8266 based Wemos D1 Mini for WiFi connectivity.
+The file history and unit tests for the libraries used on the ATmega168 can be found in my github account under atmega168-drivers.
 
 # Software Diagrams
 ### ATmega168
